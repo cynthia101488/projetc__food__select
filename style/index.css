@@ -85,6 +85,7 @@ img {
 
 .article__content {
   position: relative;
+  overflow: hidden;
 }
 
 .article__head, .article__body {
@@ -117,18 +118,23 @@ img {
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, .5));
 }
 
-.article__content:hover img {
-  transform: scale(1.05);
+.img__inner img {
   transition: transform 1s;
 }
 
-.article__content:hover .article__footer {
-  display: block;
+.article__content:hover img {
+  transform: scale(1.05);
 }
 
 .article__body {
   bottom: 0;
   padding: 10px;
+  transform: translateY(70px);
+  transition: transform 1s;
+}
+
+.article__content:hover .article__body {
+  transform: translateY(0);
 }
 
 .article__tit, .article__name {
@@ -144,10 +150,6 @@ img {
 
 .article__name {
   font-size: 16px;
-}
-
-.article__footer {
-  display: none;
 }
 
 .article__desc {
