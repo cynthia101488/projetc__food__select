@@ -3,6 +3,8 @@ const elemTownList = document.querySelector('#Town');
 const elemLoad = document.querySelector('#Load');
 let placeList = [];
 let cityArr = [];
+let currentCity = '';
+let currentTown = '';
 
 getData();
 setEvent();
@@ -26,29 +28,34 @@ function getData() {
     });
 }
 
-function dataFilter(data, e) {
-  const allPlace = data.map(item => {
-    if (e) {
-      return item.Town;
-    } else {
-      return item.City;
-    }
-  });
+function dataFilter(data) {
+  const allPlace = getZone(data)
   placeList = allPlace.filter((item, index) => {
     return allPlace.indexOf(item) === index;
   });
-  setSelectList(placeList, e);
+  setSelectList(placeList);
 }
 
-function setSelectList(arr, e) {
+function getZone(data) {
+  const arr = data.map(item => {
+    if (!currentCity) {
+      return item.City;
+    } else {
+      return item.Town;
+    }
+  });
+  return arr;
+}
+
+function setSelectList(arr) {
   let str = '';
   arr.forEach((item, index) => {
     str += `<option class="nav__item" value="${item}" data-id="${index}">${item}</option>`
   });
-  if (e) {
-    elemTownList.innerHTML = `<option class="nav__item" selected disabled>請選擇鄉鎮區...</option>` + str;
-  } else {
+  if (!currentCity) {
     elemCityList.innerHTML += str;
+  } else {
+    elemTownList.innerHTML = `<option class="nav__item" value="allTown" selected disabled>請選擇鄉鎮區...</option>` + str;
   }
 }
 
@@ -95,15 +102,17 @@ function setTemplate(data) {
 }
 
 function setEvent() {
-  elemCityList.addEventListener('change', function (e) {
-    setTemplate(cityArr[this.selectedIndex - 1]);
-    dataFilter(cityArr[this.selectedIndex - 1], e);
+  elemCityList.addEventListener('change', function () {
+    currentCity = elemCityList.selectedIndex;
+    setTemplate(cityArr[currentCity - 1]);
+    dataFilter(cityArr[currentCity - 1]);
   });
-  
-  elemTownList.addEventListener('change', function (e) {
+
+  elemTownList.addEventListener('change', function () {
+    currentTown = elemTownList.value;
     let arr = [];
-    cityArr[elemCityList.selectedIndex - 1].forEach(item => {
-      if (item.Town === e.target.value) {
+    cityArr[currentCity - 1].forEach(item => {
+      if (item.Town === currentTown) {
         arr.push(item);
       }
     });
