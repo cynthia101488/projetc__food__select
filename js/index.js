@@ -1,80 +1,97 @@
-const elemCityList = document.querySelector('#City');
-const elemTownList = document.querySelector('#Town');
-const elemLoad = document.querySelector('#Load');
-let placeList = [];
-let cityArr = [];
-let currentCity = -1;
-let currentTown = '';
-
-getData();
-setEvent();
-
-function getData() {
-  const api = 'https://data.coa.gov.tw/Service/OpenData/ODwsv/ODwsvTravelFood.aspx';
-  fetch(api)
-    .then(res => res.json())
-    .then(data => {
-      dataFilter(data);
-      cityArr = dataSplit(data);
-      setTemplate(data);
-    })
-    .catch(err => {
-      if (err) {
-        alert('資料來源有誤！')
-      }
-    })
-    .finally(() => {
-      elemLoad.style = 'display: none';
-    });
-}
-
-function dataFilter(data) {
-  const allPlace = getZone(data)
-  placeList = allPlace.filter((item, index) => allPlace.indexOf(item) === index);
-  setSelectList(placeList);
-}
-
-function getZone(data) {
-  const arr = data.map(item => {
-    if (currentCity < 0) {
-      return item.City;
-    } else {
-      return item.Town;
+class Food {
+  constructor() {
+    this.selectObj = {
+      placeList: [],
+      cityArr: [],
+      currentCity: -1,
+      currentTown: '',
+      isLoad: true
     }
-  });
-  return arr;
-}
 
-function setSelectList(arr) {
-  let str = '';
-  arr.forEach((item, index) => {
-    str += `<option class="nav__item" value="${item}" data-id="${index}">${item}</option>`
-  });
-  if (currentCity < 0) {
-    elemCityList.innerHTML += str;
-  } else {
-    elemTownList.innerHTML = `<option class="nav__item" value="allTown" selected disabled>請選擇鄉鎮區...</option>` + str;
+    this.elemCityList = document.querySelector('#City');
+    this.elemTownList = document.querySelector('#Town');
+    this.elemBox = document.querySelector('#Box');
+    this.elemLoad = document.querySelector('#Load');
+    this.init();
   }
-}
 
-function dataSplit(data) {
-  placeList.forEach(item => {
-    let arr = [];
-    data.forEach(elem => {
-      if (elem.City === item) {
-        arr.push(elem);
+  init() {
+    this.getData();
+    this.setEvent();
+  }
+
+  setLoad() {
+    if (!this.selectObj.isLoad) {
+      this.elemLoad.style = 'display: none';
+    }
+  }
+
+  getData() {
+    const api = 'https://data.coa.gov.tw/Service/OpenData/ODwsv/ODwsvTravelFood.aspx';
+    fetch(api)
+      .then(res => res.json())
+      .then(data => {
+        this.dataFilter(data);
+        this.selectObj.cityArr = this.dataSplit(data);
+        this.setTemplate(data);
+      })
+      .catch(err => {
+        if (err) {
+          alert('資料來源有誤！');
+        }
+      })
+      .finally(() => {
+        this.selectObj.isLoad = false;
+        this.setLoad();
+      });
+  }
+
+  dataFilter(data) {
+    const allPlace = this.getZone(data);
+    this.selectObj.placeList = allPlace.filter((item, index) => allPlace.indexOf(item) === index);
+    this.setSelectList(this.selectObj.placeList);
+  }
+
+  getZone(data) {
+    const arr = data.map(item => {
+      if (this.selectObj.currentCity < 0) {
+        return item.City;
+      } else {
+        return item.Town;
       }
     });
-    cityArr.push(arr);
-  });
-  return cityArr;
-}
+    return arr;
+  }
 
-function setTemplate(data) {
-  const elemBox = document.querySelector('#Box');
-  let str = ''
-  data.forEach(item => {
-    str += `<div class="article__sec">
+  setSelectList(arr) {
+    let str = '';
+    arr.forEach((item, index) => {
+      str += `<option class="nav__item" value="${item}" data-id="${index}">${item}</option>`;
+    });
+    if (this.selectObj.currentCity < 0) {
+      this.elemCityList.innerHTML += str;
+    } else {
+      this.elemTownList.innerHTML = `<option class="nav__item" value="allTown" selected disabled>請選擇鄉鎮區...</option>` + str;
+    }
+  }
+
+  dataSplit(data) {
+    this.selectObj.placeList.forEach(item => {
+      let arr = [];
+      data.forEach(elem => {
+        if (elem.City === item) {
+          arr.push(elem);
+        }
+      });
+      this.selectObj.cityArr.push(arr);
+    });
+    return this.selectObj.cityArr;
+  }
+
+  setTemplate(data) {
+    let str = '';
+    data.forEach(item => {
+      str += `<div class="article__sec">
               ${item.Url ? `<a class="article__link" href=${item.Url} target="_blank">` : ''}
                 <div class="article__content">
                   <div class="article__head">
@@ -95,25 +112,28 @@ function setTemplate(data) {
                 </div>
               ${item.Url ? `</a>` : ''}
             </div>`
-  });
-  elemBox.innerHTML = str;
-}
-
-function setEvent() {
-  elemCityList.addEventListener('change', function () {
-    currentCity = elemCityList.selectedIndex - 1;
-    setTemplate(cityArr[currentCity]);
-    dataFilter(cityArr[currentCity]);
-  });
-
-  elemTownList.addEventListener('change', function () {
-    currentTown = elemTownList.value;
-    let arr = [];
-    cityArr[currentCity].forEach(item => {
-      if (item.Town === currentTown) {
-        arr.push(item);
-      }
     });
-    setTemplate(arr);
-  });
+    this.elemBox.innerHTML = str;
+  }
+
+  setEvent() {
+    this.elemCityList.addEventListener('change', () => {
+      this.selectObj.currentCity = this.elemCityList.selectedIndex - 1;
+      this.setTemplate(this.selectObj.cityArr[this.selectObj.currentCity]);
+      this.dataFilter(this.selectObj.cityArr[this.selectObj.currentCity]);
+    });
+
+    this.elemTownList.addEventListener('change', () => {
+      this.selectObj.currentTown = this.elemTownList.value;
+      let arr = [];
+      this.selectObj.cityArr[this.selectObj.currentCity].forEach(item => {
+        if (item.Town === this.selectObj.currentTown) {
+          arr.push(item);
+        }
+      });
+      this.setTemplate(arr);
+    });
+  }
 }
+
+const food = new Food();
