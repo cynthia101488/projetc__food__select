@@ -3,7 +3,7 @@ const elemTownList = document.querySelector('#Town');
 const elemLoad = document.querySelector('#Load');
 let placeList = [];
 let cityArr = [];
-let currentCity = '';
+let currentCity = -1;
 let currentTown = '';
 
 getData();
@@ -30,15 +30,13 @@ function getData() {
 
 function dataFilter(data) {
   const allPlace = getZone(data)
-  placeList = allPlace.filter((item, index) => {
-    return allPlace.indexOf(item) === index;
-  });
+  placeList = allPlace.filter((item, index) => allPlace.indexOf(item) === index);
   setSelectList(placeList);
 }
 
 function getZone(data) {
   const arr = data.map(item => {
-    if (!currentCity) {
+    if (currentCity < 0) {
       return item.City;
     } else {
       return item.Town;
@@ -52,7 +50,7 @@ function setSelectList(arr) {
   arr.forEach((item, index) => {
     str += `<option class="nav__item" value="${item}" data-id="${index}">${item}</option>`
   });
-  if (!currentCity) {
+  if (currentCity < 0) {
     elemCityList.innerHTML += str;
   } else {
     elemTownList.innerHTML = `<option class="nav__item" value="allTown" selected disabled>請選擇鄉鎮區...</option>` + str;
@@ -83,7 +81,7 @@ function setTemplate(data) {
                     <h3 class="article__tag">${item.City}</h3>
                   </div>
                   <div class="img__inner">
-                    <img class="image" src="${item.PicURL}" alt="${item.Name}">
+                    <img class="image" src="${item.PicURL}" alt="${item.Name}" loading=""lazy>
                   </div>
                   <div class="article__body">
                     <div class="article__info">
@@ -103,15 +101,15 @@ function setTemplate(data) {
 
 function setEvent() {
   elemCityList.addEventListener('change', function () {
-    currentCity = elemCityList.selectedIndex;
-    setTemplate(cityArr[currentCity - 1]);
-    dataFilter(cityArr[currentCity - 1]);
+    currentCity = elemCityList.selectedIndex - 1;
+    setTemplate(cityArr[currentCity]);
+    dataFilter(cityArr[currentCity]);
   });
 
   elemTownList.addEventListener('change', function () {
     currentTown = elemTownList.value;
     let arr = [];
-    cityArr[currentCity - 1].forEach(item => {
+    cityArr[currentCity].forEach(item => {
       if (item.Town === currentTown) {
         arr.push(item);
       }
